@@ -1,0 +1,79 @@
+services:
+  db:
+    image: postgres:13
+    container_name: db 
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: secret123
+    networks:
+      - app-network
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d myapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    networks:
+      - app-network
+    depends_on: 
+      - backend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+  
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports: 
+      - "8081:8080"
+      - "5001:5000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    restart: unless-stopped
+
+
+
+
+
+
+    
+
+
+
+  
+
+
+volumes:
+  postgres_data:
+
+  jenkins_home:
+
+networks:
+  app-network:
+  

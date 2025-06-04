@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP1 - Application 3-tiers Docker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .architecture {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .tier {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            min-width: 120px;
+        }
+
+        .tier h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .tier p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .arrow {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 60px;
+            display: none;
+        }
+
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.loading {
+            background-color: #e2f3ff;
+            border: 1px solid #b8daff;
+            color: #004085;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .result-content {
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.05);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-ok { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-loading { background-color: #ffc107; }
+
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .info-box ul {
+            color: #424242;
+            padding-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .architecture {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐳 Application 3-tiers Docker</h1>
+            <p>Démonstration de communication entre conteneurs</p>
+        </div>
+
+        <div class="architecture">
+            <div class="tier">
+                <h3>🌐 Frontend</h3>
+                <p>Nginx</p>
+                <p>Port 80</p>
+            </div>
+            <div class="arrow">↔</div>
+            <div class="tier">
+                <h3>⚙️ Backend</h3>
+                <p>Node.js</p>
+                <p>Port 3000</p>
+            </div>
+            <div class="arrow">↔</div>
+            <div class="tier">
+                <h3>🗄️ Database</h3>
+                <p>PostgreSQL</p>
+                <p>Port 5432</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="testHealth()">
+                🩺 Tester la santé de l'application
+            </button>
+            <button class="btn" onclick="testData()">
+                📝 Tester l'insertion de données
+            </button>
+            <button class="btn" onclick="getData()">
+                📊 Récupérer les données
+            </button>
+        </div>
+
+        <div id="result" class="result"></div>
+
+        <div class="info-box">
+            <h4>ℹ️ Informations sur l'architecture</h4>
+            <ul>
+                <li><strong>Réseau Docker :</strong> app-network (communication par nom DNS)</li>
+                <li><strong>Isolation :</strong> Seul le frontend est exposé vers l'extérieur</li>
+                <li><strong>Reverse Proxy :</strong> Nginx redirige /api/* vers le backend</li>
+                <li><strong>Base de données :</strong> Accessible uniquement depuis le réseau interne</li>
+                <li><strong>Sécurité :</strong> Conteneurs avec utilisateurs non-root</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+
+        function showLoading(message) {
+            resultDiv.className = 'result loading';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <h3><span class="status-indicator status-loading"></span>⏳ ${message}</h3>
+                <div class="result-content">Requête en cours...</div>
+            `;
+        }
+
+        function showSuccess(title, data) {
+            resultDiv.className = 'result success';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <h3><span class="status-indicator status-ok"></span>✅ ${title}</h3>
+                <div class="result-content">${JSON.stringify(data, null, 2)}</div>
+            `;
+        }
+
+        function showError(title, error) {
+            resultDiv.className = 'result error';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <h3><span class="status-indicator status-error"></span>❌ ${title}</h3>
+                <div class="result-content">Erreur: ${error}</div>
+            `;
+        }
+
+        async function testHealth() {
+            showLoading('Test de santé en cours');
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Application opérationnelle !', data);
+                } else {
+                    showError('Problème détecté', data.message || 'Erreur inconnue');
+                }
+            } catch (error) {
+                showError('Erreur de connexion', `Impossible de contacter l'API: ${error.message}`);
+            }
+        }
+
+        async function testData() {
+            showLoading('Insertion de données de test');
+            
+            try {
+                const response = await fetch('/api/test-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Données insérées avec succès !', data);
+                } else {
+                    showError('Erreur lors de l\'insertion', data.message || 'Erreur inconnue');
+                }
+            } catch (error) {
+                showError('Erreur de connexion', `Impossible d'insérer les données: ${error.message}`);
+            }
+        }
+
+        async function getData() {
+            showLoading('Récupération des données');
+            
+            try {
+                const response = await fetch('/api/test-data');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess(`${data.count || 0} enregistrement(s) trouvé(s)`, data);
+                } else {
+                    showError('Erreur lors de la récupération', data.message || 'Erreur inconnue');
+                }
+            } catch (error) {
+                showError('Erreur de connexion', `Impossible de récupérer les données: ${error.message}`);
+            }
+        }
+
+        // Test automatique au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                console.log('🚀 Page chargée - Application 3-tiers Docker');
+                console.log('Frontend prêt à communiquer avec le backend');
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 
